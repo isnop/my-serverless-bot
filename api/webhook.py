@@ -17,22 +17,22 @@ ADMIN_ID = int(os.environ.get("ADMIN_ID"))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# State disimpan di memori (cocok untuk bot sederhana, tapi akan hilang saat cold start)
+# State is stored in memory (suitable for a simple bot, but will be lost on cold start)
 last_user = {}
 
-# ---------- Handler Functions (Sama seperti sebelumnya) ----------
+# ---------- Handler Functions ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hello, I'm your support assistant.\n\n"
-        "Just send me a message directly. Text, images, voice messages, and files are all supported. "
-        "I'll reply as soon as possible."
+        "👋 Hello, I am the nifz assistant.\n\n"
+        "Please send me a message directly. Text, images, voice messages, and files are all supported. "
+        "I will reply as soon as possible."
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "You can contact us by sending a message directly. "
+        "You can contact my owner by sending a direct message. "
         "Text, images, voice messages, and files are all supported.\n"
-        "Please wait patiently for a reply 🙂"
+        "Please wait patiently for my owner's reply 🙂"
     )
 
 async def forward_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,7 +51,7 @@ async def forward_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=ADMIN_ID, from_chat_id=msg.chat_id, message_id=msg.message_id
     )
     await msg.reply_text(
-        "✅ Your message has been received. Please wait for a reply from our team."
+        "✅ Your message has been received. Please wait for my owner's reply."
     )
 
 def extract_user_id(replied) -> int | None:
@@ -74,7 +74,7 @@ async def admin_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not target_id:
         target_id = last_user.get(ADMIN_ID)
     if not target_id:
-        await msg.reply_text("⚠️ No user to reply to yet. Wait for a user to send a message first.")
+        await msg.reply_text("⚠️ There is no user to reply to yet. Wait for a message from a user first.")
         return
     try:
         await context.bot.copy_message(
@@ -84,9 +84,9 @@ async def admin_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await msg.reply_text(f"❌ Failed to send reply: {e}")
 
-# ---------- Entry Point Serverless (Vercel) ----------
+# ---------- Serverless Entry Point (Vercel) ----------
 async def process_update(update_data: dict):
-    """Membangun application, memproses update, lalu shutdown."""
+    """Build the application, process the update, then shut down."""
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
@@ -105,7 +105,6 @@ class handler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length)
         try:
             update_data = json.loads(body)
-            # Jalankan proses async
             import asyncio
             asyncio.run(process_update(update_data))
             self.send_response(200)
@@ -117,7 +116,6 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_GET(self):
-        # Endpoint untuk health check
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b'Bot is running')
